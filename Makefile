@@ -73,61 +73,62 @@ ARCHIVE.cmdline     = $(AR) $(ARFLAGS) $@ $^ && $(RANLIB) $@
 
 # Directives
 
-CINCLUDES += interface src test
+CINCLUDES += src/include src/lib src/test
 
 # VPATH e.g. VPATH = src:../headers
-VPATH = ./ \
-        interface \
-        src \
-        test 
+VPATH = src \
+        src/include \
+        src/lib \
+        src/test 
 
 # Variable definitions
 LIB_NAME = SKP_SILK_SDK
 TARGET = $(LIBPREFIX)$(LIB_NAME)$(LIBSUFFIX)
+PROGENC = silkenc
+PROGDEC = silkdec
+PROGCMP = pcmcompare
 
-SRCS_C = $(wildcard src/*.c) 
+SRCS_C = $(wildcard src/lib/*.c) 
 ifneq (,$(TOOLCHAIN_PREFIX))
-	SRCS_S = $(wildcard src/*.S)
+	SRCS_S = $(wildcard src/lib/*.S)
 	OBJS := $(patsubst %.c,%$(OBJSUFFIX),$(SRCS_C)) $(patsubst %.S,%$(OBJSUFFIX),$(SRCS_S))
 else
 	OBJS := $(patsubst %.c,%$(OBJSUFFIX),$(SRCS_C))
 endif
 
-ENCODER_SRCS_C = test/Encoder.c
+ENCODER_SRCS_C = src/test/silkenc.c
 ENCODER_OBJS := $(patsubst %.c,%$(OBJSUFFIX),$(ENCODER_SRCS_C))
 
-DECODER_SRCS_C = test/Decoder.c
+DECODER_SRCS_C = src/test/silkdec.c
 DECODER_OBJS := $(patsubst %.c,%$(OBJSUFFIX),$(DECODER_SRCS_C))
 
-SIGNALCMP_SRCS_C = test/signalCompare.c
+SIGNALCMP_SRCS_C = src/test/pcmcompare.c
 SIGNALCMP_OBJS := $(patsubst %.c,%$(OBJSUFFIX),$(SIGNALCMP_SRCS_C))
 
-LIBS = \
-	$(LIB_NAME)
+LIBS = $(LIB_NAME)
 
 LDLIBDIRS = ./
 
 # Rules
 default: all
 
-all: $(TARGET) encoder decoder signalcompare
+all: $(TARGET) $(PROGENC) $(PROGDEC) $(PROGCMP)
 
 lib: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(ARCHIVE.cmdline)
 
-encoder$(EXESUFFIX): $(ENCODER_OBJS)	
+$(PROGENC)$(EXESUFFIX): $(ENCODER_OBJS)
 	$(LINK.o.cmdline)
 
-decoder$(EXESUFFIX): $(DECODER_OBJS)	
+$(PROGDEC)$(EXESUFFIX): $(DECODER_OBJS)	
 	$(LINK.o.cmdline)
 
-signalcompare$(EXESUFFIX): $(SIGNALCMP_OBJS)	
+$(PROGCMP)$(EXESUFFIX): $(SIGNALCMP_OBJS)	
 	$(LINK.o.cmdline)
 
 clean:
 	$(RM) $(TARGET)* $(OBJS) $(ENCODER_OBJS) $(DECODER_OBJS) \
-		  $(SIGNALCMP_OBJS) $(TEST_OBJS) \
-		  encoder$(EXESUFFIX) decoder$(EXESUFFIX) signalcompare$(EXESUFFIX)
-
+		$(SIGNALCMP_OBJS) $(TEST_OBJS) \
+		$(PROGENC)$(EXESUFFIX) $(PROGDEC)$(EXESUFFIX) $(PROGCMP)$(EXESUFFIX)
